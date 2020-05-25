@@ -123,6 +123,46 @@
           }
         }
       }
+    },
+    "xstate-angular": {
+      "projectType": "library",
+      "root": "projects/xstate-angular",
+      "sourceRoot": "projects/xstate-angular/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/xstate-angular/tsconfig.lib.json",
+            "project": "projects/xstate-angular/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/xstate-angular/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/xstate-angular/src/test.ts",
+            "tsConfig": "projects/xstate-angular/tsconfig.spec.json",
+            "karmaConfig": "projects/xstate-angular/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/xstate-angular/tsconfig.lib.json",
+              "projects/xstate-angular/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }},
   "defaultProject": "xstate-angular-reddit-example"
 }
