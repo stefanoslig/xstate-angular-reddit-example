@@ -1,20 +1,21 @@
-import { SubReddit } from '../subreddit/subreddit.model';
+import { Interpreter } from 'xstate';
+import { SubRedditContext } from '../subreddit/+xstate/subreddit-machine.schema';
+import { SubRedditEvent } from '../subreddit/+xstate/subreddit-machine.events';
 
 export interface RedditSchema {
   states: {
     idle: {};
-    selected: {
-      states: {
-        loading: {};
-        loaded: {};
-        failed: {};
-      };
-    };
+    selected: {};
   };
 }
 
 export interface RedditContext {
-  subreddit: string;
-  posts: SubReddit[];
-  lastUpdated: number;
+  subreddit: SubReddit;
+  subreddits: SubReddits;
 }
+
+export interface SubReddits {
+  [key: string]: SubReddit;
+}
+
+export type SubReddit = Interpreter<SubRedditContext, any, SubRedditEvent, any>;

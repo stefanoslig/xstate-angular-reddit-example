@@ -1,46 +1,29 @@
-import { Machine, assign } from 'xstate';
+import { Machine, assign, spawn } from 'xstate';
 import { RedditContext, RedditSchema } from './reddit-machine.schema';
 import { RedditEvent } from './reddit-machine.events';
+import { createSubredditMachine } from '../subreddit/+xstate/subreddit-machine.config';
 
 export const redditMachine = Machine<RedditContext, RedditSchema, RedditEvent>({
   id: 'reddit',
   initial: 'idle',
   context: {
-    subreddit: null,
-    posts: [],
-    lastUpdated: null
+    subreddits: {},
+    subreddit: null
   },
-  states: {
-    idle: {},
-    selected: {
-      initial: 'loading',
-      states: {
-        loading: {
-          invoke: {
-            id: 'fetch-subreddit',
-            src: 'invokeFetchSubreddit',
-            onError: 'failed'
-          },
-          on: {
-            SUCCESS: {
-              target: 'loaded',
-              actions: assign({
-                posts: (_, event) => event.data,
-                lastUpdated: () => Date.now()
-              })
-            }
-          }
-        },
-        loaded: {},
-        failed: {}
-      }
-    }
-  },
+  states: { idle: {}, selected: {} },
   on: {
     SELECT: {
       target: '.selected',
-      actions: assign({
-        subreddit: (context, event) => event.name
+      actions: assign((context, event) => {
+        const subreddit = spawn(createSubredditMachine(event.name));
+
+        return {
+          subreddits: {
+            ...context.subreddits,
+            [event.name]: subreddit
+          },
+          subreddit
+        };
       })
     }
   }

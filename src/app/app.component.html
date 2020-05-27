@@ -8,12 +8,8 @@
       </select>
     </form>
   </header>
-  <section>
-    <h1>{{ (state$ | async)?.matches('idle') ? 'Select a subreddit' : (state$ | async)?.context.subreddit }}</h1>
-    <ul>
-      <li *ngFor="let post of (state$ | async).context.posts">
-        {{ post.title }}
-      </li>
-    </ul>
+  <section *ngIf="redditMachine.state$ | async as state">
+    <h1>{{ state.matches('idle') ? 'Select a subreddit' : state.context.subreddit }}</h1>
+    <app-subreddit *ngIf="!!state.context.subreddit" [subreddit]="state.context.subreddit"></app-subreddit>
   </section>
 </main>

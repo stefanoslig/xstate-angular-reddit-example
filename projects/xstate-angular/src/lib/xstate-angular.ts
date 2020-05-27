@@ -1,6 +1,28 @@
-import { EventObject, StateConfig, MachineOptions, interpret, State, InterpreterOptions, Interpreter, StateMachine } from 'xstate';
-import { fromEventPattern, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import {
+  EventObject,
+  StateConfig,
+  MachineOptions,
+  interpret,
+  State,
+  InterpreterOptions,
+  Interpreter,
+  StateMachine,
+  Typestate,
+  StateSchema
+} from 'xstate';
+import { filter, shareReplay, finalize } from 'rxjs/operators';
+import { Observable, from } from 'rxjs';
+
+export type InterpretedService<
+  TContext,
+  TStateSchema extends StateSchema = any,
+  TEvent extends EventObject = EventObject,
+  TTypestate extends Typestate<TContext> = any
+> = {
+  state$: Observable<State<TContext, TEvent>>;
+  send: Interpreter<TContext, TStateSchema, TEvent, TTypestate>['send'];
+  service: Interpreter<TContext, TStateSchema, TEvent, TTypestate>;
+};
 
 export interface UseMachineOptions<TContext, TEvent extends EventObject> {
   /**
@@ -14,14 +36,15 @@ export interface UseMachineOptions<TContext, TEvent extends EventObject> {
   state?: StateConfig<TContext, TEvent>;
 }
 
-export function useMachine<TContext, TStateSchema, TEvent extends EventObject>(
+export function useMachine<
+  TContext,
+  TStateSchema extends StateSchema = any,
+  TEvent extends EventObject = EventObject,
+  TTypestate extends Typestate<TContext> = any
+>(
   machine: StateMachine<TContext, TStateSchema, TEvent>,
   options: Partial<InterpreterOptions> & Partial<UseMachineOptions<TContext, TEvent>> & Partial<MachineOptions<TContext, TEvent>> = {}
-): {
-  state$: Observable<State<TContext, TEvent>>;
-  send: Interpreter<TContext, TStateSchema, TEvent>['send'];
-  service: Interpreter<TContext, TStateSchema, TEvent>;
-} {
+): InterpretedService<TContext, TStateSchema, TEvent, TTypestate> {
   const { context, guards, actions, activities, services, delays, state: rehydratedState, ...interpreterOptions } = options;
 
   const machineConfig = {
@@ -40,10 +63,25 @@ export function useMachine<TContext, TStateSchema, TEvent extends EventObject>(
 
   const service = interpret(createdMachine, interpreterOptions).start(rehydratedState ? State.create(rehydratedState) : undefined);
 
-  const state$ = fromEventPattern<[State<TContext, TEvent>, EventObject]>(
-    handler => service.onTransition(handler),
-    (_, s) => s.stop()
-  ).pipe(map(([state, _]) => state));
+  const state$ = from(service).pipe(
+    filter(({ changed }) => changed),
+    shareReplay(1),
+    finalize(() => service.stop())
+  );
+
+  return { state$, send: service.send, service };
+}
+
+export function useService<
+  TContext,
+  TStateSchema extends StateSchema = any,
+  TEvent extends EventObject = EventObject,
+  TTypestate extends Typestate<TContext> = any
+>(service: Interpreter<TContext, TStateSchema, TEvent, TTypestate>): InterpretedService<TContext, TStateSchema, TEvent, TTypestate> {
+  const state$ = from(service).pipe(
+    shareReplay(1),
+    finalize(() => service.stop())
+  );
 
   return { state$, send: service.send, service };
 }

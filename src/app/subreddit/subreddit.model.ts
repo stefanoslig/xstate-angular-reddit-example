@@ -1,11 +1,11 @@
 export interface SubRedditResponse {
   kind: string;
   data: {
-    children: [{ data: SubReddit }];
+    children: [{ data: SubRedditData }];
   };
 }
 
-export interface SubReddit {
+export interface SubRedditData {
   id: string;
   title: string;
 }

@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { FormGroup, FormControl } from '@angular/forms';
-import { RedditMachine } from './+xstate/reddit-machine.service';
 import { SelectReddit } from './+xstate/reddit-machine.events';
+import { useMachine } from 'xstate-angular';
+import { redditMachine } from './+xstate/reddit-machine.config';
 
 @Component({
   selector: 'app-root',
@@ -10,14 +11,12 @@ import { SelectReddit } from './+xstate/reddit-machine.events';
 })
 export class AppComponent {
   subreddits = ['frontend', 'reactjs', 'vuejs'];
-  state$ = this.service.redditMachine.state$;
+  redditMachine = useMachine(redditMachine, { devTools: true });
   form = new FormGroup({
     subreddit: new FormControl(this.subreddits[0])
   });
 
-  constructor(private service: RedditMachine) {}
-
   selectSubReddit(name: string) {
-    this.service.redditMachine.send(new SelectReddit(name));
+    this.redditMachine.send(new SelectReddit(name));
   }
 }

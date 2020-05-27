@@ -4,12 +4,10 @@ import { NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { SubredditModule } from './subreddit/subreddit.module';
-import { RedditMachine } from './+xstate/reddit-machine.service';
 
 @NgModule({
   declarations: [AppComponent],
   imports: [BrowserModule, ReactiveFormsModule, SubredditModule],
-  providers: [RedditMachine],
   bootstrap: [AppComponent]
 })
 export class AppModule {}
